@@ -1,0 +1,36 @@
+#ifndef IFC_MESH_EXTRACT_EXTRACT_OBJECTS_HPP_
+#define IFC_MESH_EXTRACT_EXTRACT_OBJECTS_HPP_
+
+#include <vector>
+#include <string>
+
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+
+#include <cartan/openmesh_traits.hpp>
+
+#include "osdef.hpp"
+
+namespace ifc_mesh_extract {
+
+template <class ColorType>
+using ifc_object_t = std::tuple<cartan::openmesh_t<ColorType>, std::string, std::string>;
+
+template <class ColorType>
+using ifc_objects_t = std::vector<ifc_object_t<ColorType>>;
+
+template <class ColorType = OpenMesh::Vec4f>
+EXPORT_DECL ifc_objects_t<ColorType>
+extract_objects(const fs::path& ifc_file, bool shared_vertices = false);
+
+template <class ColorType = OpenMesh::Vec4f>
+EXPORT_DECL cartan::openmesh_t<ColorType>
+extract_single_mesh(const fs::path& ifc_file);
+
+template <class ColorType = OpenMesh::Vec4f>
+EXPORT_DECL cartan::openmesh_t<ColorType>
+extract_single_mesh(const ifc_objects_t<ColorType>& objects, std::vector<std::vector<int>>* vertex_index_map = nullptr);
+
+} // ifc_mesh_extract
+
+#endif /* IFC_MESH_EXTRACT_EXTRACT_OBJECTS_HPP_ */
