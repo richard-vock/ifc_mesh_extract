@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <ifc_mesh_extract/extract_objects.hpp>
+#include "../include/extract_objects.hpp"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/program_options.hpp>
