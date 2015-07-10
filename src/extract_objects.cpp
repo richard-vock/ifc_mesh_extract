@@ -1,13 +1,15 @@
 #include <extract_objects.hpp>
 
 #include <ifcgeom/IfcGeomObjects.h>
+#include <ifcparse/IfcParse.h>
+#include <ifcparse/Ifc2x3.h>
 #include <set>
 
 namespace ifc_mesh_extract {
 
 template <class ColorType>
 ifc_objects_t<ColorType>
-extract_objects(const fs::path& ifc_file, bool shared_vertices) {
+extract_objects(std::string& root_guid, const fs::path& ifc_file, bool shared_vertices) {
     typedef typename cartan::openmesh_t<ColorType>::Point        point_t;
     typedef typename cartan::openmesh_t<ColorType>::Normal       normal_t;
     typedef typename cartan::openmesh_t<ColorType>::VertexHandle vertex_t;
@@ -25,6 +27,10 @@ extract_objects(const fs::path& ifc_file, bool shared_vertices) {
 	if (!IfcGeomObjects::Init(ifc_file.string(), nullptr, nullptr) ) {
         throw std::runtime_error("Unable to initialize IfcGeomObjects.");
 	}
+
+    IfcParse::IfcFile* file_ptr = IfcGeomObjects::GetFile();
+    auto root_entity = file_ptr->EntitiesByType<IfcSchema::IfcRoot>();
+    root_guid = (*root_entity->begin())->GlobalId();
 
     std::set<std::string> ignore_types;
     ignore_types.insert("ifcopeningelement");
@@ -95,8 +101,8 @@ extract_objects(const fs::path& ifc_file, bool shared_vertices) {
 
 template <class ColorType>
 cartan::openmesh_t<ColorType>
-extract_single_mesh(const fs::path& ifc_file) {
-    auto objects = extract_objects<ColorType>(ifc_file);
+extract_single_mesh(std::string& root_guid, const fs::path& ifc_file) {
+    auto objects = extract_objects<ColorType>(root_guid, ifc_file);
     return extract_single_mesh(objects);
 }
 
@@ -145,7 +151,7 @@ extract_single_mesh(const ifc_objects_t<ColorType>& objects, std::vector<std::ve
 
 // explicit instatiation for color types
 #define INSTANTIATE_COLOR_TYPE(type) \
-    template ifc_mesh_extract::ifc_objects_t<type> ifc_mesh_extract::extract_objects<type>(const fs::path&, bool shared_vertices); \
-    template cartan::openmesh_t<type> ifc_mesh_extract::extract_single_mesh<type>(const fs::path&); \
+    template ifc_mesh_extract::ifc_objects_t<type> ifc_mesh_extract::extract_objects<type>(std::string&, const fs::path&, bool shared_vertices); \
+    template cartan::openmesh_t<type> ifc_mesh_extract::extract_single_mesh<type>(std::string&, const fs::path&); \
     template cartan::openmesh_t<type> ifc_mesh_extract::extract_single_mesh<type>(const ifc_mesh_extract::ifc_objects_t<type>&, std::vector<std::vector<int>>*);
 #include <cartan/openmesh_colors.def>

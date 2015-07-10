@@ -53,13 +53,13 @@ int main (int argc, char const* argv[]) {
         return 1;
     }
 
-    // compute path elements for output files
-    fs::path prefix_out = path_out / fs::basename(path_in);
-    std::string suffix_out = ".obj";
+    std::string root_guid;
+    auto objects = ifc_mesh_extract::extract_objects(root_guid, path_in, vm.count("shared"));
 
-    auto filename_out = [=](std::string guid, std::string type) { return prefix_out.string() + "__GUID_" + guid + "__TYPE_" + type + suffix_out; };
-
-    auto objects = ifc_mesh_extract::extract_objects(path_in, vm.count("shared"));
+    auto filename_out = [=](std::string guid, std::string type) {
+        std::string file_part = root_guid + "__GUID_" + guid + "__TYPE_" + type + ".obj";
+        return (path_out / file_part).string();
+    };
 
     if (!objects.size()) {
         std::cerr << "No objects extracted. Aborting." << "\n";

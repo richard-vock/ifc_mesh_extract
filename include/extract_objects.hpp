@@ -21,11 +21,11 @@ using ifc_objects_t = std::vector<ifc_object_t<ColorType>>;
 
 template <class ColorType = OpenMesh::Vec4f>
 EXPORT_DECL ifc_objects_t<ColorType>
-extract_objects(const fs::path& ifc_file, bool shared_vertices = false);
+extract_objects(std::string& root_guid, const fs::path& ifc_file, bool shared_vertices = false);
 
 template <class ColorType = OpenMesh::Vec4f>
 EXPORT_DECL cartan::openmesh_t<ColorType>
-extract_single_mesh(const fs::path& ifc_file);
+extract_single_mesh(std::string& root_guid, const fs::path& ifc_file);
 
 template <class ColorType = OpenMesh::Vec4f>
 EXPORT_DECL cartan::openmesh_t<ColorType>
