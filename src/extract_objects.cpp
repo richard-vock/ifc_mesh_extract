@@ -1,8 +1,8 @@
 #include <extract_objects.hpp>
 
-#include <ifcgeom3/IfcGeomObjects.h>
-#include <ifcparse3/IfcParse.h>
-#include <ifcparse3/Ifc2x3.h>
+#include <ifcgeom/IfcGeomObjects.h>
+#include <ifcparse/IfcParse.h>
+#include <ifcparse/Ifc2x3.h>
 #include <set>
 
 namespace ifc_mesh_extract {

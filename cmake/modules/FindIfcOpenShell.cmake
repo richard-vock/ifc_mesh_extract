@@ -7,8 +7,9 @@
 # IFCOPENSHELL_LIBRARY_DIRS - Directories containing the IfcOpenShell library.
 # IFCOPENSHELL_LIBRARIES - IfcOpenShell library files.
 
-find_path(IFCOPENSHELL_INCLUDE_DIR ifcgeom3
-    PATHS "/usr/include" "/usr/local/include" "$ENV{PROGRAMFILES}" "/usr/x86_64-w64-mingw32/include")
+find_path(IFCOPENSHELL_INCLUDE_DIR ifcgeom PATHS "/usr/include/ifcopenshell3" "/usr/local/include/ifcopenshell3" "/usr/x86_64-w64-mingw32/include/ifcopenshell" NO_DEFAULT_PATHS)
+message(STATUS "found ifcopenshell library at:")
+message(STATUS ${IFCOPENSHELL_INCLUDE_DIR})
 
 find_library(IFCOPENSHELL_GEOM_LIBRARY_PATH IfcGeom3 PATHS "/usr/lib" "/usr/local/lib" "/usr/x86_64-w64-mingw32/lib")
 find_library(IFCOPENSHELL_PARSE_LIBRARY_PATH IfcParse3 PATHS "/usr/lib" "/usr/local/lib" "/usr/x86_64-w64-mingw32/lib")
