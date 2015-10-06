@@ -1,6 +1,6 @@
 #include <extract_objects.hpp>
 
-#include <ifcgeom/IfcGeomObjects.h>
+#include <ifcgeom/IfcGeomIterator.h>
 #include <ifcparse/IfcParse.h>
 #include <ifcparse/Ifc2x3.h>
 #include <set>
@@ -18,45 +18,49 @@ extract_objects(std::string& root_guid, const fs::path& ifc_file, bool shared_ve
         throw std::runtime_error("Unable to open file \"" + ifc_file.string() + "\" for reading.");
     }
 
-    // load ifc file
-	IfcGeomObjects::Settings(IfcGeomObjects::USE_WORLD_COORDS, true);
-	IfcGeomObjects::Settings(IfcGeomObjects::WELD_VERTICES, shared_vertices);
-	IfcGeomObjects::Settings(IfcGeomObjects::DISABLE_TRIANGULATION, false);
-	IfcGeomObjects::Settings(IfcGeomObjects::FORCE_CCW_FACE_ORIENTATION, true);
-	//if (!IfcGeomObjects::Init(ifcPath.string(), &std::cout) ) {
-	if (!IfcGeomObjects::Init(ifc_file.string(), nullptr, nullptr) ) {
-        throw std::runtime_error("Unable to initialize IfcGeomObjects.");
-	}
+    IfcGeom::IteratorSettings settings;
 
-    IfcParse::IfcFile* file_ptr = IfcGeomObjects::GetFile();
-    auto root_entity = file_ptr->EntitiesByType<IfcSchema::IfcRoot>();
+    settings.set(IfcGeom::IteratorSettings::APPLY_DEFAULT_MATERIALS,      true);
+    settings.set(IfcGeom::IteratorSettings::USE_WORLD_COORDS,             true);
+    settings.set(IfcGeom::IteratorSettings::WELD_VERTICES,                shared_vertices);
+    settings.set(IfcGeom::IteratorSettings::DISABLE_TRIANGULATION,        false);
+
+    IfcGeom::Iterator<double> context_iterator(settings, ifc_file.string());
+
+    IfcParse::IfcFile* file_ptr = context_iterator.getFile();
+    auto root_entity = file_ptr->entitiesByType<IfcSchema::IfcRoot>();
     root_guid = (*root_entity->begin())->GlobalId();
 
     std::set<std::string> ignore_types;
     ignore_types.insert("ifcopeningelement");
     ignore_types.insert("ifcspace");
 
-    ifc_objects_t<ColorType> objects;
-    do { // while (IfcGeomObjects::Next())
-        ifc_object_t<ColorType> object;
-		std::get<0>(object).request_vertex_normals();
-		std::get<0>(object).request_face_normals();
+    context_iterator.excludeEntities(ignore_types);
+    context_iterator.initialize();
 
-		const IfcGeomObjects::IfcGeomObject* geom_object = IfcGeomObjects::Get();
+    ifc_objects_t<ColorType> objects;
+
+    do {
+        ifc_object_t<ColorType> object;
+        std::get<0>(object).request_vertex_normals();
+        std::get<0>(object).request_face_normals();
+
+        const IfcGeom::Element<double>* geom_object = context_iterator.get();
+        auto triangulation = static_cast<const IfcGeom::TriangulationElement<double>*>(geom_object);
+        const IfcGeom::Representation::Triangulation<double>& mesh = triangulation->geometry();
 
         // get type
-		std::get<2>(object) = geom_object->type();
-		for (std::string::iterator c = std::get<2>(object).begin(); c != std::get<2>(object).end(); ++c) {
-			*c = tolower(*c);
-		}
-		if (ignore_types.find(std::get<2>(object)) != ignore_types.end()) continue;
+        std::get<2>(object) = geom_object->type();
+        for (std::string::iterator c = std::get<2>(object).begin(); c != std::get<2>(object).end(); ++c) {
+            *c = tolower(*c);
+        }
+
         std::get<1>(object) = geom_object->guid();
 
         // get polygon data
-		auto& ifc_mesh = geom_object->mesh();
-		auto& fs = ifc_mesh.faces();
-		auto& vs = ifc_mesh.verts();
-		auto& ns = ifc_mesh.normals();
+        auto& fs = mesh.faces();
+        auto& vs = mesh.verts();
+        auto& ns = mesh.normals();
 
         uint32_t v_count = vs.size() / 3;
         std::vector<vertex_t> vertex_handles;
@@ -75,14 +79,14 @@ extract_objects(std::string& root_guid, const fs::path& ifc_file, bool shared_ve
             vertex_handles.push_back(vertex);
         }
 
-		for (uint32_t f = 0; f < fs.size(); f += 3) {
+        for (uint32_t f = 0; f < fs.size(); f += 3) {
             std::vector<vertex_t> vertices;
             for (uint32_t v = 0; v < 3; ++v) {
                 int idx = fs[f+v];
                 vertices.push_back(vertex_handles[idx]);
             }
             std::get<0>(object).add_face(vertices);
-		}
+        }
 
         // update mesh-internal normal state
         if (shared_vertices) {
@@ -92,9 +96,7 @@ extract_objects(std::string& root_guid, const fs::path& ifc_file, bool shared_ve
         }
 
         objects.push_back(object);
-    } while (IfcGeomObjects::Next());
-
-    IfcGeomObjects::CleanUp();
+    } while (context_iterator.next());
 
     return objects;
 }
