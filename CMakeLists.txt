@@ -58,4 +58,6 @@ if (EIGEN_FOUND AND Boost_FOUND AND OPENMESH_FOUND AND OPENCASCADE_FOUND AND IFC
     endif()
     install (DIRECTORY include/ DESTINATION include/ifc_mesh_extract)
 
+    file (GLOB find_modules RELATIVE "${PROJECT_SOURCE_DIR}" "cmake/modules/self/*.cmake")
+    install (FILES ${find_modules} DESTINATION share/IFCMeshExtract)
 endif()
