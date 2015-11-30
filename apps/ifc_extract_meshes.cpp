@@ -104,7 +104,10 @@ int main(int argc, char const *argv[]) {
   fs::path json_path(json_out);
   for (const auto &obj : objects) {
     std::string fname = filename_out(std::get<1>(obj), std::get<2>(obj));
-    if (!OpenMesh::IO::write_mesh(std::get<0>(obj), fname)) {
+    OpenMesh::IO::Options wopts;
+    wopts += OpenMesh::IO::Options::VertexNormal;
+    wopts += OpenMesh::IO::Options::FaceNormal;
+    if (!OpenMesh::IO::write_mesh(std::get<0>(obj), fname, wopts)) {
       std::cerr << "Unable to write mesh to \"" + fname + "\"";
     }
     if (json) {
