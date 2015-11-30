@@ -106,9 +106,9 @@ int main(int argc, char const *argv[]) {
     std::string fname = filename_out(std::get<1>(obj), std::get<2>(obj));
     OpenMesh::IO::Options wopts;
     wopts += OpenMesh::IO::Options::VertexNormal;
-    wopts += OpenMesh::IO::Options::FaceNormal;
+    //wopts += OpenMesh::IO::Options::FaceNormal;
     if (!OpenMesh::IO::write_mesh(std::get<0>(obj), fname, wopts)) {
-      std::cerr << "Unable to write mesh to \"" + fname + "\"";
+      std::cerr << "Unable to write mesh to \"" + fname + "\"\n";
     }
     if (json) {
       ifc_mesh_extract::object_info info;
