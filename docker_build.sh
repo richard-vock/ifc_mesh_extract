@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 PROJECT="$1"
 
 cd /tmp
